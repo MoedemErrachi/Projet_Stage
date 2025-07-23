@@ -1,65 +1,57 @@
-
-import { createBrowserRouter , RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Login from './Components/Login';
 import Signup from './Components/Signup';
-import { UserProvider } from './Components/UserContext'; 
-import ProtectedRoute from './Components/ProtectedRoute';
-import  { Toaster } from 'react-hot-toast';
+import Sidebar from './Components/Sidebar';
+import MyTasks from './Components/MyTasks';
+import { Toaster } from 'react-hot-toast';
+
+// Placeholder components
+const Home = () => <h1 className="text-2xl font-bold text-center mt-8">Home Page</h1>;
+const Contact = () => <h1 className="text-2xl font-bold text-center mt-8">Contact Page</h1>;
+const Error = () => <h1 className="text-2xl font-bold text-center mt-8">404 - Page Not Found</h1>;
+
+const TasksLayout = () => {
+  return (
+    <div className="flex">
+      <Sidebar />
+      <MyTasks />
+    </div>
+  );
+};
 
 const router = createBrowserRouter([
-  /*{
-    path:"/",
-    element:<Home/>
+  {
+    path: '/login',
+    element: <Login />,
   },
   {
-    path:"/contact",
-    element:<Contact/>
+    path: '/signup',
+    element: <Signup />,
   },
   {
-    path:"/profile",
-    element:<ProtectedRoute><Profile/></ProtectedRoute>
+    path: '/tasks',
+    element: <TasksLayout />,
   },
   {
-    path:"/docs",
-    element:<Docs/>
-  },*/
-  {
-  path:"/login",
-    element:<Login/>
+    path: '/',
+    element: <Home />,
   },
   {
-  path:"/signup",
-    element:<Signup/>
+    path: '/contact',
+    element: <Contact />,
   },
- /* {
-    path:"/income",
-      element:<ProtectedRoute><Income/></ProtectedRoute>
-    },
   {
-    path:"/dashboard",
-      element:<ProtectedRoute><Dashboard/></ProtectedRoute>
-    } ,
-  {
-    path:"/budgets",
-      element:<ProtectedRoute><Budgets/></ProtectedRoute>
-    },
-    {path:"/transactions",
-      element:<ProtectedRoute><Transactions/></ProtectedRoute>
-    }
-    ,
-    {path:"/categories",
-      element:<ProtectedRoute><Categories/></ProtectedRoute>
-    },
-    {path:"*",
-      element:<ProtectedRoute><Error/></ProtectedRoute>
-    }*/
-])
+    path: '*',
+    element: <Error />,
+  },
+]);
+
 function App() {
   return (
-    <UserProvider> 
-      <Toaster/>
-      <RouterProvider router={router} ></RouterProvider>
-    </UserProvider>
+    <div>
+      <Toaster />
+      <RouterProvider router={router} />
+    </div>
   );
 }
 

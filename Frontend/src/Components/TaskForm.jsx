@@ -1,29 +1,24 @@
 import React, { useState } from 'react';
-import api from '../service/api';
 
-const TaskForm = ({ projectId }) => {
+const TaskForm = ({ onTaskAdded }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('todo');
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      await api.post('/tasks', { title, description, dueDate, status, projectId });
-      setTitle('');
-      setDescription('');
-      setDueDate('');
-      setStatus('todo');
-    } catch (error) {
-      console.error('Task creation failed:', error);
-      alert('Failed to create task.');
-    }
+    const newTask = { title, description, dueDate, status };
+    onTaskAdded(newTask); // Pass new task to parent
+    setTitle('');
+    setDescription('');
+    setDueDate('');
+    setStatus('todo');
   };
 
   return (
     <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Create Task</h2>
+      <h2 className="text-2xl font-bold mb-4">Add New Task</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-gray-700">Title</label>
@@ -69,7 +64,7 @@ const TaskForm = ({ projectId }) => {
           type="submit"
           className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         >
-          Add Task
+          Save Task
         </button>
       </form>
     </div>
