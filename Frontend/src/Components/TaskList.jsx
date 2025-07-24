@@ -1,28 +1,47 @@
 import React from 'react';
 
-const TaskList = ({ tasks, onDelete, onStatusUpdate }) => {
+const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify, onAddSubtask, onSubtaskToggle, selectedTask, setSelectedTask }) => {
+  const handleTaskClick = (task) => {
+    if (selectedTask?._id === task._id) {
+      // If re-clicking the same task, save changes and close
+      setSelectedTask(null);
+    } else {
+      // Select new task for editing
+      setSelectedTask(task);
+    }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+    <div className="flex-1 max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-4">Task List</h2>
-      <ul className="space-y-2">
+      <ul className="space-y-4">
         {tasks.map((task) => (
-          <li key={task._id} className="flex justify-between items-center p-2 border-b">
-            <span>
-              {task.title} - <span className="text-gray-600">{task.dueDate || 'N/A'} - {task.status}</span>
-            </span>
-            <div>
-              <button
-                onClick={() => onDelete(task._id)}
-                className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded mr-2"
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => onStatusUpdate(task._id, task.status === 'todo' ? 'inprogress' : 'completed')}
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded"
-              >
-                {task.status === 'todo' ? 'Start' : 'Complete'}
-              </button>
+          <li
+            key={task._id}
+            className="p-4 border rounded-lg shadow-sm cursor-pointer"
+            onClick={() => handleTaskClick(task)}
+          >
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-medium">{task.title}</span>
+              <div className="flex space-x-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onStatusUpdate(task._id); }}
+                  className={`w-6 h-6 rounded-full ${task.status === 'completed' ? 'bg-gray-400' : 'bg-green-500'} text-white flex items-center justify-center`}
+                >
+                  ✓
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onModify(task._id); }}
+                  className="w-6 h-6 text-gray-600 hover:text-gray-800"
+                >
+                  ⋮
+                </button>
+              </div>
+            </div>
+            <div className="text-sm text-gray-600 mt-1">
+              {task.subtasks.length > 0
+                ? `${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length} subtasks completed`
+                : 'No subtasks'}
             </div>
           </li>
         ))}

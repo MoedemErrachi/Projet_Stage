@@ -1,24 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const TaskForm = ({ onTaskAdded }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [status, setStatus] = useState('todo');
+const TaskForm = ({ onTaskAdded, initialTask }) => {
+  const [title, setTitle] = useState(initialTask?.title || '');
+  const [description, setDescription] = useState(initialTask?.description || '');
+  const [dueDate, setDueDate] = useState(initialTask?.dueDate || '');
+  const [status, setStatus] = useState(initialTask?.status || 'todo');
+
+  useEffect(() => {
+    if (initialTask) {
+      setTitle(initialTask.title || '');
+      setDescription(initialTask.description || '');
+      setDueDate(initialTask.dueDate || '');
+      setStatus(initialTask.status || 'todo');
+    }
+  }, [initialTask]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newTask = { title, description, dueDate, status };
-    onTaskAdded(newTask); // Pass new task to parent
-    setTitle('');
-    setDescription('');
-    setDueDate('');
-    setStatus('todo');
+    const newTask = { title, description, dueDate, status, subtasks: initialTask?.subtasks || [] };
+    onTaskAdded(newTask);
+    if (!initialTask) {
+      setTitle('');
+      setDescription('');
+      setDueDate('');
+      setStatus('todo');
+    }
   };
 
   return (
     <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Add New Task</h2>
+      <h2 className="text-2xl font-bold mb-4">{initialTask ? 'Modify Task' : 'Add New Task'}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-gray-700">Title</label>
@@ -64,7 +75,7 @@ const TaskForm = ({ onTaskAdded }) => {
           type="submit"
           className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         >
-          Save Task
+          {initialTask ? 'Update Task' : 'Save Task'}
         </button>
       </form>
     </div>
