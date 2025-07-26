@@ -1,37 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-const TaskForm = ({ onTaskAdded, initialTask }) => {
+const TaskForm = ({ onTaskAdded, initialTask, onClose }) => {
   const [title, setTitle] = useState(initialTask?.title || '');
-  const [description, setDescription] = useState(initialTask?.description || '');
   const [dueDate, setDueDate] = useState(initialTask?.dueDate || '');
-  const [status, setStatus] = useState(initialTask?.status || 'todo');
+  const [description, setDescription] = useState(initialTask?.description || ''); // New description state
+  const formRef = useRef(null);
 
   useEffect(() => {
     if (initialTask) {
       setTitle(initialTask.title || '');
-      setDescription(initialTask.description || '');
       setDueDate(initialTask.dueDate || '');
-      setStatus(initialTask.status || 'todo');
+      setDescription(initialTask.description || ''); // Set description if editing
     }
   }, [initialTask]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (formRef.current && !formRef.current.contains(event.target)) {
+        onClose(); // Close form and discard changes
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newTask = { title, description, dueDate, status, subtasks: initialTask?.subtasks || [] };
+    const newTask = {
+      title,
+      dueDate: dueDate || null,
+      description, // Include description
+      status: 'todo', // Default status to 'todo'
+      subtasks: initialTask?.subtasks || [],
+    };
     onTaskAdded(newTask);
-    if (!initialTask) {
-      setTitle('');
-      setDescription('');
-      setDueDate('');
-      setStatus('todo');
-    }
+    onClose();
   };
 
   return (
-    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">{initialTask ? 'Modify Task' : 'Add New Task'}</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
+    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md" ref={formRef}>
+      <h2 className="text-xl font-bold mb-4">{initialTask ? 'Edit Task' : 'Add Task'}</h2>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
           <label className="block text-gray-700">Title</label>
           <input
             type="text"
@@ -41,15 +51,7 @@ const TaskForm = ({ onTaskAdded, initialTask }) => {
             required
           />
         </div>
-        <div>
-          <label className="block text-gray-700">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <div>
+        <div className="mb-4">
           <label className="block text-gray-700">Due Date</label>
           <input
             type="date"
@@ -58,25 +60,30 @@ const TaskForm = ({ onTaskAdded, initialTask }) => {
             className="w-full p-2 border rounded"
           />
         </div>
-        <div>
-          <label className="block text-gray-700">Status</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
+        <div className="mb-4">
+          <label className="block text-gray-700">Description</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             className="w-full p-2 border rounded"
-            required
-          >
-            <option value="todo">To Do</option>
-            <option value="inprogress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
+            placeholder="Enter task description"
+          />
         </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          {initialTask ? 'Update Task' : 'Save Task'}
-        </button>
+       <div className="flex justify-between">
+          <button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            {initialTask ? 'Update Task' : 'Save Task'}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   );

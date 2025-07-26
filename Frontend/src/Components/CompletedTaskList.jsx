@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify, onAddSubtask, onSubtaskToggle, selectedTask, setSelectedTask, className, showForm, setShowForm }) => {
+const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCompletedTask, setSelectedCompletedTask, setTasks, className }) => {
   const [showMenu, setShowMenu] = useState(null);
   const menuRef = useRef(null);
 
   const handleTaskClick = (task) => {
-    if (selectedTask?._id === task._id) {
-      setSelectedTask(null); // Close panel if same task is clicked again
+    if (selectedCompletedTask?._id === task._id) {
+      setSelectedCompletedTask(null); // Close panel if same task is clicked again
     } else {
       onModify(task._id); // Open new task panel
     }
@@ -20,10 +20,9 @@ const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify, onAddSubtask, onS
 
   const handleMenuOption = (taskId, action) => {
     setShowMenu(null);
-    if (action === 'delete') onDelete(taskId);
-    else if (action === 'complete' || action === 'uncomplete') {
-      onStatusUpdate(taskId); // Update status without opening panel
-    } else if (action === 'modify') onModify(taskId);
+    if (action === 'uncomplete') onUncomplete(taskId);
+    else if (action === 'modify') onModify(taskId);
+    else if (action === 'delete') onDelete(taskId);
   };
 
   useEffect(() => {
@@ -38,7 +37,7 @@ const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify, onAddSubtask, onS
 
   return (
     <div className={`flex-1 max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md ${className || ''}`}>
-      <h2 className="text-2xl font-bold mb-4">Task List</h2>
+      <h2 className="text-2xl font-bold mb-4">Completed Tasks</h2>
       <ul className="space-y-4">
         {tasks.map((task) => (
           <li
@@ -64,10 +63,10 @@ const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify, onAddSubtask, onS
                       Modify
                     </button>
                     <button
-                      onClick={() => handleMenuOption(task._id, task.status === 'todo' ? 'complete' : 'uncomplete')}
+                      onClick={() => handleMenuOption(task._id, 'uncomplete')}
                       className="block w-full text-left p-2 hover:bg-gray-100"
                     >
-                      {task.status === 'todo' ? 'Complete' : 'Uncomplete'}
+                      Uncomplete
                     </button>
                     <button
                       onClick={() => handleMenuOption(task._id, 'delete')}
@@ -87,16 +86,8 @@ const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify, onAddSubtask, onS
           </li>
         ))}
       </ul>
-      {!showForm && (
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
-        >
-          Add Task
-        </button>
-      )}
     </div>
   );
 };
 
-export default TaskList;
+export default CompletedTaskList;
