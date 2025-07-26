@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify, onAddSubtask, onSubtaskToggle, selectedTask, setSelectedTask, className, showForm, setShowForm }) => {
+const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify,  selectedTask, setSelectedTask, className, showForm, setShowForm }) => {
   const [showMenu, setShowMenu] = useState(null);
-  const menuRef = useRef(null);
+  const menuRefs = useRef(new Map());
 
   const handleTaskClick = (task) => {
     if (selectedTask?._id === task._id) {
       setSelectedTask(null); // Close panel if same task is clicked again
     } else {
       onModify(task._id); // Open new task panel
+      
     }
   };
 
@@ -21,20 +22,31 @@ const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify, onAddSubtask, onS
   const handleMenuOption = (taskId, action) => {
     setShowMenu(null);
     if (action === 'delete') onDelete(taskId);
-    else if (action === 'complete' || action === 'uncomplete') {
+    else if (action === 'complete' ) {
       onStatusUpdate(taskId); // Update status without opening panel
+      console.log(taskId)
     } else if (action === 'modify') onModify(taskId);
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowMenu(null);
+ useEffect(() => {
+  const handleClickOutside = (event) => {
+    let clickedInside = false;
+
+    for (const ref of menuRefs.current.values()) {
+      if (ref && ref.contains(event.target)) {
+        clickedInside = true;
+        break;
       }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    }
+
+    if (!clickedInside) {
+      setShowMenu(null);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
 
   return (
     <div className={`flex-1 max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md ${className || ''}`}>
@@ -48,7 +60,10 @@ const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify, onAddSubtask, onS
           >
             <div className="flex justify-between items-center">
               <span className="text-lg font-medium">{task.title}</span>
-              <div className="relative" ref={menuRef}>
+              <div
+  className="relative"
+  ref={(el) => menuRefs.current.set(task._id, el)}
+>
                 <button
                   onClick={(e) => handleMenuClick(e, task._id)}
                   className="focus:outline-none"
@@ -64,13 +79,18 @@ const TaskList = ({ tasks, onDelete, onStatusUpdate, onModify, onAddSubtask, onS
                       Modify
                     </button>
                     <button
-                      onClick={() => handleMenuOption(task._id, task.status === 'todo' ? 'complete' : 'uncomplete')}
+                      onClick={(e) => {
+                        e.stopPropagation(); 
+                        handleMenuOption(task._id, 'complete');
+                      }}
                       className="block w-full text-left p-2 hover:bg-gray-100"
                     >
-                      {task.status === 'todo' ? 'Complete' : 'Uncomplete'}
+                      Complete
                     </button>
                     <button
-                      onClick={() => handleMenuOption(task._id, 'delete')}
+                      onClick={(e) => {
+                         e.stopPropagation(); 
+                         handleMenuOption(task._id, 'delete')}}
                       className="block w-full text-left p-2 hover:bg-gray-100 text-red-500"
                     >
                       Delete

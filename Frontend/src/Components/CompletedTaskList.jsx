@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCompletedTask, setSelectedCompletedTask, setTasks, className }) => {
+const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCompletedTask, setSelectedCompletedTask }) => {
   const [showMenu, setShowMenu] = useState(null);
-  const menuRef = useRef(null);
+    const menuRefs = useRef(new Map());
 
   const handleTaskClick = (task) => {
     if (selectedCompletedTask?._id === task._id) {
@@ -26,18 +26,28 @@ const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCo
   };
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowMenu(null);
+  const handleClickOutside = (event) => {
+    let clickedInside = false;
+
+    for (const ref of menuRefs.current.values()) {
+      if (ref && ref.contains(event.target)) {
+        clickedInside = true;
+        break;
       }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    }
+
+    if (!clickedInside) {
+      setShowMenu(null);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, []);
+
 
   return (
-    <div className={`flex-1 max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md ${className || ''}`}>
-      <h2 className="text-2xl font-bold mb-4">Completed Tasks</h2>
+    <div className={"flex-1 max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md "}>
       <ul className="space-y-4">
         {tasks.map((task) => (
           <li
@@ -47,7 +57,11 @@ const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCo
           >
             <div className="flex justify-between items-center">
               <span className="text-lg font-medium">{task.title}</span>
-              <div className="relative" ref={menuRef}>
+              <div
+  className="relative"
+  ref={(el) => menuRefs.current.set(task._id, el)}
+>
+
                 <button
                   onClick={(e) => handleMenuClick(e, task._id)}
                   className="focus:outline-none"
@@ -55,7 +69,7 @@ const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCo
                   ⋮
                 </button>
                 {showMenu === task._id && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white border rounded shadow-lg z-10">
+                  <div className="absolute right-0  w-32 bg-white border rounded shadow-lg z-10">
                     <button
                       onClick={() => handleMenuOption(task._id, 'modify')}
                       className="block w-full text-left p-2 hover:bg-gray-100"
@@ -63,13 +77,17 @@ const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCo
                       Modify
                     </button>
                     <button
-                      onClick={() => handleMenuOption(task._id, 'uncomplete')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMenuOption(task._id, 'uncomplete')}}
                       className="block w-full text-left p-2 hover:bg-gray-100"
                     >
                       Uncomplete
                     </button>
                     <button
-                      onClick={() => handleMenuOption(task._id, 'delete')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleMenuOption(task._id, 'delete')}}
                       className="block w-full text-left p-2 hover:bg-gray-100 text-red-500"
                     >
                       Delete

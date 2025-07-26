@@ -6,7 +6,7 @@ import CompletedTaskList from './CompletedTaskList';
 // Mock data for testing
 const mockTasks = [
   { _id: '1', title: 'Complete Report', dueDate: '2025-07-25', description: 'Prepare the quarterly report', status: 'todo', subtasks: [{ id: 's1', title: 'Draft', completed: false }, { id: 's2', title: 'Review', completed: true }] },
-  { _id: '2', title: 'Review Code', dueDate: '2025-07-24', description: 'Review the latest code changes', status: 'inprogress', subtasks: [{ id: 's3', title: 'Check Syntax', completed: true }, { id: 's4', title: 'Test', completed: false }] },
+  { _id: '2', title: 'Review Code', dueDate: '2025-07-24', description: 'Review the latest code changes', status: 'todo', subtasks: [{ id: 's3', title: 'Check Syntax', completed: true }, { id: 's4', title: 'Test', completed: false }] },
   { _id: '3', title: 'Send Email', dueDate: null, description: 'Send confirmation email to team', status: 'completed', subtasks: [] },
 ];
 
@@ -16,12 +16,12 @@ const MyTasks = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null); // For non-completed tasks
   const [selectedCompletedTask, setSelectedCompletedTask] = useState(null); // For completed tasks
-  const menuRef = useRef(null);
 
-  useEffect(() => { setTasks(mockTasks) }, []); // Runs only on mount
-  useEffect(() => {
-    console.log('Tasks updated:', tasks); // Log tasks to verify state change
-  }, [tasks]);
+  useEffect(() => { 
+    setTasks(mockTasks) 
+  }, []); 
+
+
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -39,8 +39,9 @@ const MyTasks = () => {
       task._id === taskId ? { ...task, status: task.status === 'todo' ? 'completed' : 'todo' } : task
     ));
     // Ensure the panel doesn't reopen after status update
-    if (selectedTask?._id === taskId) setSelectedTask(null);
-    if (selectedCompletedTask?._id === taskId) setSelectedCompletedTask(null);
+ setSelectedTask(null);
+    setSelectedCompletedTask(null);
+    console.log(selectedTask || selectedCompletedTask)
   };
 
   const handleModify = (taskId) => {
@@ -52,6 +53,7 @@ const MyTasks = () => {
       setSelectedCompletedTask(JSON.parse(JSON.stringify(task))); // Open completed task panel
     } else {
       setSelectedTask(JSON.parse(JSON.stringify(task))); // Open non-completed task panel
+      console.log(taskId)
     }
   };
 
@@ -176,7 +178,7 @@ const MyTasks = () => {
             onStatusUpdate={handleStatusUpdate}
             onModify={handleModify}
             onAddSubtask={handleAddSubtask}
-            onSubtaskToggle={handleSubtaskToggle}
+            
             selectedTask={selectedTask}
             setSelectedTask={setSelectedTask}
             showForm={showForm}
@@ -337,7 +339,7 @@ const MyTasks = () => {
             selectedCompletedTask={selectedCompletedTask}
             setSelectedCompletedTask={setSelectedCompletedTask}
             setTasks={setTasks}
-            className="w-1/3 bg-white shadow-md"
+           
           />
         </div>
       )}
