@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import loginanimation from '../Images/Signup.json'; // Ensure this path is correct
+import loginanimation from '../Images/Login.json'; // Ensure this path is correct
 import { Link, useNavigate } from 'react-router-dom';
 import { IoIosLogIn } from 'react-icons/io';
 import Lottie from 'lottie-react';

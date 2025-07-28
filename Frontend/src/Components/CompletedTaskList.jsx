@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCompletedTask, setSelectedCompletedTask }) => {
   const [showMenu, setShowMenu] = useState(null);
-    const menuRefs = useRef(new Map());
+  const menuRefs = useRef(new Map());
 
   const handleTaskClick = (task) => {
-    if (selectedCompletedTask?._id === task._id) {
+    if (selectedCompletedTask?.id === task.id) {
       setSelectedCompletedTask(null); // Close panel if same task is clicked again
     } else {
-      onModify(task._id); // Open new task panel
+      onModify(task.id); // Open new task panel
     }
   };
 
@@ -26,60 +26,47 @@ const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCo
   };
 
   useEffect(() => {
-  const handleClickOutside = (event) => {
-    let clickedInside = false;
-
-    for (const ref of menuRefs.current.values()) {
-      if (ref && ref.contains(event.target)) {
-        clickedInside = true;
-        break;
+    const handleClickOutside = (event) => {
+      let clickedInside = false;
+      for (const ref of menuRefs.current.values()) {
+        if (ref && ref.contains(event.target)) {
+          clickedInside = true;
+          break;
+        }
       }
-    }
-
-    if (!clickedInside) {
-      setShowMenu(null);
-    }
-  };
-
-  document.addEventListener('mousedown', handleClickOutside);
-  return () => document.removeEventListener('mousedown', handleClickOutside);
-}, []);
-
+      if (!clickedInside) {
+        setShowMenu(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
-    <div className={"flex-1 max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md "}>
+    <div className="flex-1 max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <ul className="space-y-4">
         {tasks.map((task) => (
           <li
-            key={task._id}
+            key={task.id}
             className="p-4 border rounded-lg shadow-sm cursor-pointer"
             onClick={() => handleTaskClick(task)}
           >
             <div className="flex justify-between items-center">
               <span className="text-lg font-medium">{task.title}</span>
-              <div
-  className="relative"
-  ref={(el) => menuRefs.current.set(task._id, el)}
->
-
-                <button
-                  onClick={(e) => handleMenuClick(e, task._id)}
-                  className="focus:outline-none"
-                >
+              <div className="relative" ref={(el) => menuRefs.current.set(task.id, el)}>
+                <button onClick={(e) => handleMenuClick(e, task.id)} className="focus:outline-none">
                   ⋮
                 </button>
-                {showMenu === task._id && (
-                  <div className="absolute right-0  w-32 bg-white border rounded shadow-lg z-10">
-                    <button
-                      onClick={() => handleMenuOption(task._id, 'modify')}
-                      className="block w-full text-left p-2 hover:bg-gray-100"
-                    >
+                {showMenu === task.id && (
+                  <div className="absolute right-0 w-32 bg-white border rounded shadow-lg z-10">
+                    <button onClick={() => handleMenuOption(task.id, 'modify')} className="block w-full text-left p-2 hover:bg-gray-100">
                       Modify
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleMenuOption(task._id, 'uncomplete')}}
+                        handleMenuOption(task.id, 'uncomplete');
+                      }}
                       className="block w-full text-left p-2 hover:bg-gray-100"
                     >
                       Uncomplete
@@ -87,7 +74,8 @@ const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCo
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleMenuOption(task._id, 'delete')}}
+                        handleMenuOption(task.id, 'delete');
+                      }}
                       className="block w-full text-left p-2 hover:bg-gray-100 text-red-500"
                     >
                       Delete
@@ -98,7 +86,7 @@ const CompletedTaskList = ({ tasks, onUncomplete, onModify, onDelete, selectedCo
             </div>
             <div className="text-sm text-gray-600 mt-1">
               {task.subtasks.length > 0
-                ? `${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length} subtasks completed`
+                ? `${task.subtasks.filter((s) => s.completed).length}/${task.subtasks.length} subtasks completed`
                 : ''}
             </div>
           </li>
