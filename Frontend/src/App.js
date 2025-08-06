@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+/*import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Login from './Components/Login';
 import Signup from './Components/Signup';
 import Sidebar from './Components/Sidebar';
@@ -55,4 +55,57 @@ function App() {
   );
 }
 
-export default App;
+export default App;*/
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { UserProvider } from "./Components/UserContext"
+import Login from "./Components/Login"
+import Signup from "./Components/Signup"
+import AdminDashboard from "./Components/AdminDashboard"
+import StudentDashboard from "./Components/StudentDashboard"
+import EncadreurDashboard from "./Components/EncadreurDashboard"
+import ProtectedRoute from "./Components/ProtectedRoute"
+
+function App() {
+  return (
+    <UserProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/*"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/encadreur/*"
+              element={
+                <ProtectedRoute allowedRoles={["encadreur"]}>
+                  <EncadreurDashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </UserProvider>
+  )
+}
+
+export default App

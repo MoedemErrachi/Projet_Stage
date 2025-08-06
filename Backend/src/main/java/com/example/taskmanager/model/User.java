@@ -1,71 +1,95 @@
 package com.example.taskmanager.model;
 
 import jakarta.persistence.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.util.Collection;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-public class User implements UserDetails {
-
+public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(nullable = false)
-    private String username;  // your display username
+    private String name;
 
-    @Column(nullable = false, unique = true)
-    private String email;     // used for login and getUsername()
+    @Column(unique = true)
+    private String email;
 
-    @Column(nullable = false)
     private String password;
 
-    // getters and setters...
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private Role role;
 
-    // Spring Security uses this as the login name, so return email here
-    @Override
-    public String getUsername() {
-        return username;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private Status status = Status.PENDING;
+
+    private String studentId;
+
+    private String department;
+
+    // NEW: For student-supervisor assignment
+    private Long supervisorId;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    public enum Role {
+        ADMIN, STUDENT, ENCADREUR
     }
-  
-    public String getEmail() {
-        return email;
-    }
-    @Override
-    public String getPassword() {
-        return password;
+
+    public enum Status {
+        PENDING, APPROVED, REJECTED
     }
 
-public void setEmail(String email) {
-    this.email = email;
-}
-public void setPassword(String password) {
-    this.password = password;
-}
-public void setUsername(String username) {
-    this.username = username;
-}
+    // Constructors
+    public User() {}
 
-    // All accounts are active by default, remove if you add logic later
-    @Override
-    public boolean isAccountNonExpired() { return true; }
-
-    @Override
-    public boolean isAccountNonLocked() { return true; }
-
-    @Override
-    public boolean isCredentialsNonExpired() { return true; }
-
-    @Override
-    public boolean isEnabled() { return true; }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAuthorities'");
+    public User(String name, String email, String password, Role role) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.role = role;
     }
+
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+
+    public Status getStatus() { return status; }
+    public void setStatus(Status status) { this.status = status; }
+
+    public String getStudentId() { return studentId; }
+    public void setStudentId(String studentId) { this.studentId = studentId; }
+
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
+
+    public Long getSupervisorId() { return supervisorId; }
+    public void setSupervisorId(Long supervisorId) { this.supervisorId = supervisorId; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
