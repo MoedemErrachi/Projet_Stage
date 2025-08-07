@@ -18,8 +18,8 @@ const TaskCreation = () => {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [isDraft, setIsDraft] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [attachmentFile, setAttachmentFile] = useState(null)
 
   useEffect(() => {
     if (user?.id) {
@@ -46,6 +46,18 @@ const TaskCreation = () => {
     })
   }
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File size must be less than 10MB")
+        return
+      }
+      setAttachmentFile(file)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setSubmitting(true)
@@ -57,7 +69,7 @@ const TaskCreation = () => {
         supervisorId: user.id
       }
 
-      await supervisorAPI.createTask(taskData)
+      await supervisorAPI.createTask(taskData, attachmentFile)
       
       // Reset form
       setFormData({
@@ -68,7 +80,11 @@ const TaskCreation = () => {
         priority: "MEDIUM",
         category: "general",
       })
-      setIsDraft(false)
+      setAttachmentFile(null)
+      // Reset file input
+      const fileInput = document.getElementById('attachment')
+      if (fileInput) fileInput.value = ''
+      
       alert("Task created successfully!")
     } catch (error) {
       console.error("Error creating task:", error)
@@ -84,31 +100,6 @@ const TaskCreation = () => {
       description: formData.description + template,
     })
   }
-
-  const handleSaveAsDraft = () => {
-    if (formData.title && formData.description) {
-      // In a real app, you'd save this to localStorage or backend
-      localStorage.setItem('taskDraft', JSON.stringify(formData))
-      alert("Task saved as draft successfully!")
-      setIsDraft(true)
-    } else {
-      alert("Please fill in at least the title and description to save as draft.")
-    }
-  }
-
-  // Load draft on component mount
-  useEffect(() => {
-    const savedDraft = localStorage.getItem('taskDraft')
-    if (savedDraft) {
-      try {
-        const draftData = JSON.parse(savedDraft)
-        setFormData(draftData)
-        setIsDraft(true)
-      } catch (error) {
-        console.error("Error loading draft:", error)
-      }
-    }
-  }, [])
 
   if (loading) {
     return (
@@ -179,6 +170,22 @@ const TaskCreation = () => {
                       placeholder="Provide detailed task description, requirements, and expectations..."
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                  </div>
+
+                  <div>
+                    <label htmlFor="attachment" className="block text-sm font-medium text-gray-700 mb-2">
+                      Attach File (Optional)
+                    </label>
+                    <input
+                      type="file"
+                      id="attachment"
+                      onChange={handleFileChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      accept=".pdf,.doc,.docx,.txt,.zip,.rar,.ppt,.pptx"
+                    />
+                    {attachmentFile && (
+                      <p className="text-sm text-gray-600 mt-1">Selected: {attachmentFile.name}</p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -270,14 +277,7 @@ const TaskCreation = () => {
               </div>
 
               {/* Form Actions */}
-              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleSaveAsDraft}
-                  className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  {isDraft ? "Draft Saved" : "Save as Draft"}
-                </button>
+              <div className="flex justify-end pt-6 border-t border-gray-200">
                 <button
                   type="submit"
                   disabled={submitting || students.length === 0}

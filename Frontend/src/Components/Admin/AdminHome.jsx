@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 import { adminAPI } from "../../services/api"
 
 const AdminHome = () => {
@@ -123,21 +124,30 @@ const AdminHome = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-blue-50 rounded-lg text-center">
-            <div className="text-2xl mb-2">👥</div>
+          <Link 
+            to="/admin/users" 
+            className="p-4 bg-blue-50 rounded-lg text-center hover:bg-blue-100 transition-colors group"
+          >
+            <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">👥</div>
             <h3 className="font-semibold text-gray-900">Manage Users</h3>
             <p className="text-sm text-gray-600">Approve pending students</p>
-          </div>
-          <div className="p-4 bg-purple-50 rounded-lg text-center">
-            <div className="text-2xl mb-2">👨‍🏫</div>
+          </Link>
+          <Link 
+            to="/admin/encadreurs" 
+            className="p-4 bg-purple-50 rounded-lg text-center hover:bg-purple-100 transition-colors group"
+          >
+            <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">👨‍🏫</div>
             <h3 className="font-semibold text-gray-900">Manage Supervisors</h3>
             <p className="text-sm text-gray-600">Add or edit supervisors</p>
-          </div>
-          <div className="p-4 bg-green-50 rounded-lg text-center">
-            <div className="text-2xl mb-2">📊</div>
+          </Link>
+          <Link 
+            to="/admin/reports" 
+            className="p-4 bg-green-50 rounded-lg text-center hover:bg-green-100 transition-colors group"
+          >
+            <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">📊</div>
             <h3 className="font-semibold text-gray-900">View Reports</h3>
             <p className="text-sm text-gray-600">System statistics</p>
-          </div>
+          </Link>
         </div>
       </div>
     </div>

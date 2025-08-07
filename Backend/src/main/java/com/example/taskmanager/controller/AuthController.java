@@ -2,9 +2,11 @@ package com.example.taskmanager.controller;
 
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.repository.UserRepository;
+import com.example.taskmanager.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +19,9 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     @PostMapping("/signin")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
@@ -37,6 +42,7 @@ public class AuthController {
                 response.put("status", user.getStatus().name());
                 response.put("studentId", user.getStudentId());
                 response.put("department", user.getDepartment());
+                response.put("documentsCompleted", user.getDocumentsCompleted());
                 return ResponseEntity.ok(response);
             }
         }
@@ -47,11 +53,19 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody Map<String, String> signupRequest) {
+    public ResponseEntity<?> signup(
+            @RequestParam("name") String name,
+            @RequestParam("email") String email,
+            @RequestParam("password") String password,
+            @RequestParam("studentId") String studentId,
+            @RequestParam("phone") String phone,
+            @RequestParam("university") String university,
+            @RequestParam("major") String major,
+            @RequestParam("year") String year,
+            @RequestParam("cvFile") MultipartFile cvFile,
+            @RequestParam("motivationFile") MultipartFile motivationFile) {
+        
         Map<String, String> response = new HashMap<>();
-
-        String email = signupRequest.get("email");
-        String studentId = signupRequest.get("studentId");
 
         if (userRepository.existsByEmail(email)) {
             response.put("message", "Email is already in use!");
@@ -63,17 +77,41 @@ public class AuthController {
             return ResponseEntity.badRequest().body(response);
         }
 
-        User user = new User();
-        user.setName(signupRequest.get("name"));
-        user.setEmail(email);
-        user.setPassword(signupRequest.get("password"));
-        user.setStudentId(studentId);
-        user.setRole(User.Role.STUDENT);
-        user.setStatus(User.Status.PENDING);
+        try {
+            User user = new User();
+            user.setName(name);
+            user.setEmail(email);
+            user.setPassword(password);
+            user.setStudentId(studentId);
+            user.setPhone(phone);
+            user.setUniversity(university);
+            user.setMajor(major);
+            user.setAcademicYear(year);
+            user.setRole(User.Role.STUDENT);
+            user.setStatus(User.Status.PENDING);
 
-        userRepository.save(user);
+            // Store CV file
+            if (cvFile != null && !cvFile.isEmpty()) {
+                String cvStoredFileName = fileStorageService.storeFile(cvFile, "application");
+                user.setCvFileName(cvFile.getOriginalFilename());
+                user.setCvFilePath(cvStoredFileName);
+            }
 
-        response.put("message", "User registered successfully! Please wait for admin approval.");
-        return ResponseEntity.ok(response);
+            // Store motivation letter file
+            if (motivationFile != null && !motivationFile.isEmpty()) {
+                String motivationStoredFileName = fileStorageService.storeFile(motivationFile, "application");
+                user.setMotivationFileName(motivationFile.getOriginalFilename());
+                user.setMotivationFilePath(motivationStoredFileName);
+            }
+
+            userRepository.save(user);
+
+            response.put("message", "Application submitted successfully! Please wait for admin review.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("message", "Error processing application: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useUser } from "../UserContext"
-import { studentAPI } from "../../services/api"
+import { studentAPI, downloadFile } from "../../services/api"
 
 const StudentTasks = () => {
   const { user } = useUser()
@@ -11,9 +11,11 @@ const StudentTasks = () => {
   const [error, setError] = useState("")
   const [selectedTask, setSelectedTask] = useState(null)
   const [response, setResponse] = useState("")
+  const [responseFile, setResponseFile] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedTaskDetails, setSelectedTaskDetails] = useState(null)
+  const [modalType, setModalType] = useState("") // "start" or "complete"
 
   useEffect(() => {
     if (user?.id) {
@@ -33,33 +35,44 @@ const StudentTasks = () => {
     }
   }
 
+  const handleStartTask = async (task) => {
+    try {
+      await studentAPI.updateTaskResponse(task.id, "Task started")
+      // Update local state
+      setTasks(tasks.map((t) => 
+        t.id === task.id 
+          ? { ...t, status: "IN_PROGRESS" }
+          : t
+      ))
+    } catch (error) {
+      console.error("Error starting task:", error)
+      setError("Failed to start task")
+    }
+  }
+
+  const handleCompleteTask = (task) => {
+    setSelectedTask(task)
+    setResponse("")
+    setResponseFile(null)
+    setModalType("complete")
+    setShowModal(true)
+  }
+
   const handleResponseSubmit = async () => {
     if (selectedTask && response.trim()) {
       try {
-        await studentAPI.updateTaskResponse(selectedTask.id, response)
+        await studentAPI.completeTask(selectedTask.id, response, responseFile)
+        
         // Update local state
         setTasks(tasks.map((task) => 
           task.id === selectedTask.id 
-            ? { ...task, response, status: task.status === "PENDING" ? "IN_PROGRESS" : task.status }
+            ? { ...task, response, status: "COMPLETED", responseFileName: responseFile?.name }
             : task
         ))
         setSelectedTask(null)
         setResponse("")
+        setResponseFile(null)
         setShowModal(false)
-      } catch (error) {
-        console.error("Error updating task response:", error)
-        setError("Failed to update task response")
-      }
-    }
-  }
-
-  const handleCompleteTask = async (taskId) => {
-    if (window.confirm("Are you sure you want to mark this task as completed?")) {
-      try {
-        await studentAPI.completeTask(taskId)
-        setTasks(tasks.map((task) => 
-          task.id === taskId ? { ...task, status: "COMPLETED" } : task
-        ))
       } catch (error) {
         console.error("Error completing task:", error)
         setError("Failed to complete task")
@@ -67,11 +80,21 @@ const StudentTasks = () => {
     }
   }
 
-  const openResponseModal = (task) => {
-    setSelectedTask(task)
-    setResponse(task.response || "")
-    setShowModal(true)
-  }
+  const handleDownloadFile = (task, fileType, action = 'view') => {
+    // Use the stored filename (attachmentFilePath or responseFilePath) for download
+    let storedFileName;
+    if (fileType === 'task') {
+      storedFileName = task.attachmentFilePath;
+    } else {
+      storedFileName = task.responseFilePath;
+    }
+    
+    if (storedFileName) {
+      downloadFile(storedFileName, fileType, action);
+    } else {
+      console.error('No stored filename found for', fileType);
+    }
+  };
 
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
@@ -106,6 +129,18 @@ const StudentTasks = () => {
   const handleViewDetails = (task) => {
     setSelectedTaskDetails(task)
     setShowDetailsModal(true)
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File size must be less than 10MB")
+        return
+      }
+      setResponseFile(file)
+    }
   }
 
   if (loading) {
@@ -165,6 +200,28 @@ const StudentTasks = () => {
 
               <p className="text-gray-700 mb-4">{task.description}</p>
 
+              {/* Task Attachment (Supervisor's file) */}
+              {task.attachmentFileName && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <h4 className="font-medium text-blue-900 mb-2">📎 Task Attachment:</h4>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-blue-800 text-sm">{task.attachmentFileName}</span>
+                    <button 
+                      onClick={() => handleDownloadFile(task, 'task', 'view')}
+                      className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleDownloadFile(task, 'task', 'download')}
+                      className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                    >
+                      Download
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-gray-600">
                   <span className="font-medium">Due Date:</span> {task.dueDate}
@@ -180,6 +237,23 @@ const StudentTasks = () => {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                   <h4 className="font-medium text-blue-900 mb-2">Your Response:</h4>
                   <p className="text-blue-800 text-sm">{task.response}</p>
+                  {task.responseFileName && (
+                    <div className="mt-2 flex items-center space-x-2">
+                      <span className="text-blue-700 text-sm">📎 {task.responseFileName}</span>
+                      <button 
+                        onClick={() => handleDownloadFile(task, 'response', 'view')}
+                        className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleDownloadFile(task, 'response', 'download')}
+                        className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                      >
+                        Download
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -191,12 +265,20 @@ const StudentTasks = () => {
               )}
 
               <div className="flex justify-end space-x-3">
-                {task.status !== "COMPLETED" && (
+                {task.status === "PENDING" && (
                   <button
-                    onClick={() => openResponseModal(task)}
+                    onClick={() => handleStartTask(task)}
                     className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    {task.status === "PENDING" ? "Start Task" : "Update Response"}
+                    Start Task
+                  </button>
+                )}
+                {task.status === "IN_PROGRESS" && (
+                  <button
+                    onClick={() => handleCompleteTask(task)}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Mark Complete
                   </button>
                 )}
                 <button
@@ -205,38 +287,66 @@ const StudentTasks = () => {
                 >
                   View Details
                 </button>
-                {task.status === "IN_PROGRESS" && (
-                  <button
-                    onClick={() => handleCompleteTask(task.id)}
-                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Mark Complete
-                  </button>
-                )}
               </div>
             </div>
           ))
         )}
       </div>
 
-      {/* Response Modal */}
-      {showModal && selectedTask && (
+      {/* Complete Task Modal */}
+      {showModal && selectedTask && modalType === "complete" && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-[500px] shadow-lg rounded-md bg-white">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Respond to Task</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Complete Task</h3>
               <h4 className="text-md font-semibold text-gray-800 mb-2">{selectedTask.title}</h4>
-              <p className="text-sm text-gray-600 mb-4">{selectedTask.description}</p>
+
+              {/* Show task attachment in modal */}
+              {selectedTask.attachmentFileName && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h5 className="font-medium text-blue-900 mb-2">Task Attachment:</h5>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-blue-800 text-sm">📎 {selectedTask.attachmentFileName}</span>
+                    <button 
+                      onClick={() => handleDownloadFile(selectedTask, 'task', 'view')}
+                      className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleDownloadFile(selectedTask, 'task', 'download')}
+                      className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                    >
+                      Download
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Your Response:</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Completion Message: *</label>
                 <textarea
                   value={response}
                   onChange={(e) => setResponse(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={5}
-                  placeholder="Enter your response or progress update..."
+                  rows={4}
+                  placeholder="Describe what you have completed and any important notes..."
+                  required
                 />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Attach File (Optional):</label>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  accept=".pdf,.doc,.docx,.txt,.zip,.rar,.jpg,.jpeg,.png"
+                />
+                {responseFile && (
+                  <p className="text-sm text-gray-600 mt-1">Selected: {responseFile.name}</p>
+                )}
+                <p className="text-xs text-gray-500 mt-1">Max file size: 10MB. Supported formats: PDF, DOC, DOCX, TXT, ZIP, RAR, JPG, PNG</p>
               </div>
 
               <div className="flex justify-end space-x-3">
@@ -248,9 +358,10 @@ const StudentTasks = () => {
                 </button>
                 <button
                   onClick={handleResponseSubmit}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                  disabled={!response.trim()}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Submit Response
+                  Complete Task
                 </button>
               </div>
             </div>
@@ -295,11 +406,53 @@ const StudentTasks = () => {
                   <label className="block text-sm font-medium text-gray-700">Due Date</label>
                   <p className="text-sm text-gray-900">{selectedTaskDetails.dueDate}</p>
                 </div>
+                
+                {/* Task Attachment in Details Modal */}
+                {selectedTaskDetails.attachmentFileName && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Task Attachment</label>
+                    <div className="mt-1 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-blue-800">📎 {selectedTaskDetails.attachmentFileName}</span>
+                        <button 
+                          onClick={() => handleDownloadFile(selectedTaskDetails, 'task', 'view')}
+                          className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleDownloadFile(selectedTaskDetails, 'task', 'download')}
+                          className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                        >
+                          Download
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {selectedTaskDetails.response && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Your Response</label>
                     <div className="mt-1 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm text-blue-800">{selectedTaskDetails.response}</p>
+                      {selectedTaskDetails.responseFileName && (
+                        <div className="mt-2 flex items-center space-x-2">
+                          <span className="text-blue-700 text-sm">📎 {selectedTaskDetails.responseFileName}</span>
+                          <button 
+                            onClick={() => handleDownloadFile(selectedTaskDetails, 'response', 'view')}
+                            className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleDownloadFile(selectedTaskDetails, 'response', 'download')}
+                            className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                          >
+                            Download
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

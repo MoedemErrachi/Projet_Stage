@@ -43,6 +43,18 @@ public class Task {
 
     private Long supervisorId;
 
+    // File attachment fields
+    private String attachmentFileName;
+    private String attachmentFilePath;
+    private String attachmentFileType;
+    private Long attachmentFileSize;
+
+    // Student response file attachment fields
+    private String responseFileName;
+    private String responseFilePath;
+    private String responseFileType;
+    private Long responseFileSize;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -96,6 +108,32 @@ public class Task {
 
     public Long getSupervisorId() { return supervisorId; }
     public void setSupervisorId(Long supervisorId) { this.supervisorId = supervisorId; }
+
+    // File attachment getters and setters
+    public String getAttachmentFileName() { return attachmentFileName; }
+    public void setAttachmentFileName(String attachmentFileName) { this.attachmentFileName = attachmentFileName; }
+
+    public String getAttachmentFilePath() { return attachmentFilePath; }
+    public void setAttachmentFilePath(String attachmentFilePath) { this.attachmentFilePath = attachmentFilePath; }
+
+    public String getAttachmentFileType() { return attachmentFileType; }
+    public void setAttachmentFileType(String attachmentFileType) { this.attachmentFileType = attachmentFileType; }
+
+    public Long getAttachmentFileSize() { return attachmentFileSize; }
+    public void setAttachmentFileSize(Long attachmentFileSize) { this.attachmentFileSize = attachmentFileSize; }
+
+    // Student response file getters and setters
+    public String getResponseFileName() { return responseFileName; }
+    public void setResponseFileName(String responseFileName) { this.responseFileName = responseFileName; }
+
+    public String getResponseFilePath() { return responseFilePath; }
+    public void setResponseFilePath(String responseFilePath) { this.responseFilePath = responseFilePath; }
+
+    public String getResponseFileType() { return responseFileType; }
+    public void setResponseFileType(String responseFileType) { this.responseFileType = responseFileType; }
+
+    public Long getResponseFileSize() { return responseFileSize; }
+    public void setResponseFileSize(Long responseFileSize) { this.responseFileSize = responseFileSize; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

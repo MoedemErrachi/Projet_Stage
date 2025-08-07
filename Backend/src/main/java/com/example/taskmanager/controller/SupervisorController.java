@@ -4,9 +4,11 @@ import com.example.taskmanager.model.Task;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.repository.TaskRepository;
 import com.example.taskmanager.repository.UserRepository;
+import com.example.taskmanager.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -25,6 +27,9 @@ public class SupervisorController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     @GetMapping("/tasks/{supervisorId}")
     public ResponseEntity<List<Task>> getSupervisorTasks(@PathVariable Long supervisorId) {
         List<Task> tasks = taskRepository.findBySupervisorId(supervisorId);
@@ -38,24 +43,51 @@ public class SupervisorController {
     }
 
     @PostMapping("/tasks")
-    public ResponseEntity<?> createTask(@RequestBody Map<String, Object> taskData) {
+    public ResponseEntity<?> createTask(
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam("dueDate") String dueDate,
+            @RequestParam("studentId") Long studentId,
+            @RequestParam("supervisorId") Long supervisorId,
+            @RequestParam("priority") String priority,
+            @RequestParam("category") String category,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+        
         Map<String, String> response = new HashMap<>();
         
         try {
             Task task = new Task();
-            task.setTitle((String) taskData.get("title"));
-            task.setDescription((String) taskData.get("description"));
-            task.setDueDate(LocalDate.parse((String) taskData.get("dueDate")));
-            task.setStudentId(Long.valueOf(taskData.get("studentId").toString()));
-            task.setSupervisorId(Long.valueOf(taskData.get("supervisorId").toString()));
-            task.setPriority(Task.Priority.valueOf(((String) taskData.get("priority")).toUpperCase()));
-            task.setCategory((String) taskData.get("category"));
+            task.setTitle(title);
+            task.setDescription(description);
+            task.setDueDate(LocalDate.parse(dueDate));
+            task.setStudentId(studentId);
+            task.setSupervisorId(supervisorId);
+            task.setPriority(Task.Priority.valueOf(priority.toUpperCase()));
+            task.setCategory(category);
             task.setStatus(Task.Status.PENDING);
+            
+            // Handle file upload if present
+            if (file != null && !file.isEmpty()) {
+                try {
+                    String storedFileName = fileStorageService.storeFile(file, "task");
+                    task.setAttachmentFileName(file.getOriginalFilename());
+                    task.setAttachmentFilePath(storedFileName); // Store the safe filename
+                    task.setAttachmentFileType(file.getContentType());
+                    task.setAttachmentFileSize(file.getSize());
+                    
+                    System.out.println("Task file uploaded: " + file.getOriginalFilename() + " -> " + storedFileName);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response.put("message", "Error uploading file: " + e.getMessage());
+                    return ResponseEntity.badRequest().body(response);
+                }
+            }
             
             taskRepository.save(task);
             response.put("message", "Task created successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             response.put("message", "Error creating task: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }

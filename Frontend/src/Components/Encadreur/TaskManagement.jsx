@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useUser } from "../UserContext"
-import { supervisorAPI } from "../../services/api"
+import { supervisorAPI, downloadFile } from "../../services/api"
 
 const TaskManagement = () => {
   const { user } = useUser()
@@ -92,6 +92,22 @@ const TaskManagement = () => {
       }
     }
   }
+
+  const handleDownloadFile = (task, fileType, action = 'view') => {
+    // Use the stored filename (attachmentFilePath or responseFilePath) for download
+    let storedFileName;
+    if (fileType === 'task') {
+      storedFileName = task.attachmentFilePath;
+    } else {
+      storedFileName = task.responseFilePath;
+    }
+    
+    if (storedFileName) {
+      downloadFile(storedFileName, fileType, action);
+    } else {
+      console.error('No stored filename found for', fileType);
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -281,6 +297,28 @@ const TaskManagement = () => {
 
               <p className="text-gray-700 mb-4">{task.description}</p>
 
+              {/* Task Attachment (Supervisor's file) */}
+              {task.attachmentFileName && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <h4 className="font-medium text-blue-900 mb-2">📎 Your Task Attachment:</h4>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-blue-800 text-sm">{task.attachmentFileName}</span>
+                    <button 
+                      onClick={() => handleDownloadFile(task, 'task', 'view')}
+                      className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleDownloadFile(task, 'task', 'download')}
+                      className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                    >
+                      Download
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm text-gray-600">
                   <span className="font-medium">Due Date:</span> {task.dueDate}
@@ -294,6 +332,24 @@ const TaskManagement = () => {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                   <h4 className="font-medium text-blue-900 mb-2">Student Response:</h4>
                   <p className="text-blue-800 text-sm">{task.response}</p>
+                  {/* Student's Response File */}
+                  {task.responseFileName && (
+                    <div className="mt-2 flex items-center space-x-2">
+                      <span className="text-blue-700 text-sm">📎 {task.responseFileName}</span>
+                      <button 
+                        onClick={() => handleDownloadFile(task, 'response', 'view')}
+                        className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleDownloadFile(task, 'response', 'download')}
+                        className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                      >
+                        Download
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -328,7 +384,7 @@ const TaskManagement = () => {
       {/* Review Modal */}
       {showReviewModal && selectedTask && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-[500px] shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Grade & Review Task</h3>
               <h4 className="text-md font-semibold text-gray-800 mb-2">{selectedTask.title}</h4>
@@ -338,6 +394,23 @@ const TaskManagement = () => {
                 <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                   <h5 className="font-medium text-gray-700 mb-2">Student Response:</h5>
                   <p className="text-sm text-gray-600">{selectedTask.response}</p>
+                  {selectedTask.responseFileName && (
+                    <div className="mt-2 flex items-center space-x-2">
+                      <span className="text-gray-700 text-sm">📎 {selectedTask.responseFileName}</span>
+                      <button 
+                        onClick={() => handleDownloadFile(selectedTask, 'response', 'view')}
+                        className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleDownloadFile(selectedTask, 'response', 'download')}
+                        className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                      >
+                        Download
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -383,7 +456,8 @@ const TaskManagement = () => {
                 </button>
                 <button
                   onClick={submitReview}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                  disabled={!grade}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Submit Review
                 </button>
@@ -438,11 +512,53 @@ const TaskManagement = () => {
                   <label className="block text-sm font-medium text-gray-700">Category</label>
                   <p className="text-sm text-gray-900">{selectedTaskDetails.category || 'General'}</p>
                 </div>
+                
+                {/* Task Attachment in Details */}
+                {selectedTaskDetails.attachmentFileName && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Your Task Attachment</label>
+                    <div className="mt-1 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-blue-800">📎 {selectedTaskDetails.attachmentFileName}</span>
+                        <button 
+                          onClick={() => handleDownloadFile(selectedTaskDetails, 'task', 'view')}
+                          className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleDownloadFile(selectedTaskDetails, 'task', 'download')}
+                          className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                        >
+                          Download
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {selectedTaskDetails.response && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Student Response</label>
                     <div className="mt-1 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm text-blue-800">{selectedTaskDetails.response}</p>
+                      {selectedTaskDetails.responseFileName && (
+                        <div className="mt-2 flex items-center space-x-2">
+                          <span className="text-blue-700 text-sm">📎 {selectedTaskDetails.responseFileName}</span>
+                          <button 
+                            onClick={() => handleDownloadFile(selectedTaskDetails, 'response', 'view')}
+                            className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleDownloadFile(selectedTaskDetails, 'response', 'download')}
+                            className="text-blue-600 hover:text-blue-800 text-sm underline font-medium"
+                          >
+                            Download
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

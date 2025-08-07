@@ -17,8 +17,15 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     @Query("SELECT COUNT(t) FROM Task t WHERE t.status = 'COMPLETED'")
     Long countCompletedTasks();
     
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.studentId = ?1")
     Long countByStudentId(Long studentId);
+    
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.studentId = ?1 AND t.status = ?2")
     Long countByStudentIdAndStatus(Long studentId, Task.Status status);
+    
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.supervisorId = ?1")
     Long countBySupervisorId(Long supervisorId);
+    
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.supervisorId = ?1 AND t.status = ?2")
     Long countBySupervisorIdAndStatus(Long supervisorId, Task.Status status);
 }

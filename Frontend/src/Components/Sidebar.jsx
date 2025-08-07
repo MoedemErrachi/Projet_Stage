@@ -6,13 +6,13 @@ const Sidebar = () => {
   const { user, logout } = useUser()
   const location = useLocation()
 
+  // Hide sidebar for rejected and pending students
+  if (user?.role === "student" && (user?.status === "rejected" || user?.status === "pending")) {
+    return null
+  }
+
   const getMenuItems = () => {
     const basePath = `/${user.role}`
-
-    // For pending students, show limited menu
-    if (user.role === "student" && user.status === "pending") {
-      return [{ path: `${basePath}`, label: "Dashboard", icon: "📊" }]
-    }
 
     switch (user.role) {
       case "admin":
