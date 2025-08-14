@@ -12,10 +12,8 @@ const StudentManagement = () => {
 
   // Modal states
   const [showProfileModal, setShowProfileModal] = useState(false)
-  const [showMessageModal, setShowMessageModal] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState(null)
-  const [message, setMessage] = useState("")
   const [newTask, setNewTask] = useState({ title: "", description: "", dueDate: "", priority: "MEDIUM" })
 
   useEffect(() => {
@@ -41,23 +39,9 @@ const StudentManagement = () => {
     setShowProfileModal(true)
   }
 
-  const handleSendMessage = (student) => {
-    setSelectedStudent(student)
-    setShowMessageModal(true)
-  }
-
   const handleAssignTask = (student) => {
     setSelectedStudent(student)
     setShowTaskModal(true)
-  }
-
-  const sendMessage = () => {
-    if (message.trim()) {
-      alert(`Message sent to ${selectedStudent.name}: ${message}`)
-      setMessage("")
-      setShowMessageModal(false)
-      setSelectedStudent(null)
-    }
   }
 
   const assignTask = async () => {
@@ -179,10 +163,14 @@ const StudentManagement = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                      {student.name.charAt(0)}
+                      {student.firstName?.charAt(0) || student.name?.charAt(0) || 'S'}
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{student.name}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {student.firstName && student.lastName 
+                          ? `${student.firstName} ${student.lastName}` 
+                          : student.name || 'Unknown Student'}
+                      </h3>
                       <p className="text-sm text-gray-600">{student.email}</p>
                       <p className="text-sm text-gray-500">ID: {student.studentId}</p>
                     </div>
@@ -212,7 +200,7 @@ const StudentManagement = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Actions - Removed Send Message button */}
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={() => handleViewProfile(student)}
@@ -225,12 +213,6 @@ const StudentManagement = () => {
                     className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Assign Task
-                  </button>
-                  <button
-                    onClick={() => handleSendMessage(student)}
-                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Send Message
                   </button>
                 </div>
               </div>
@@ -248,7 +230,11 @@ const StudentManagement = () => {
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Name</label>
-                  <p className="text-sm text-gray-900">{selectedStudent.name}</p>
+                  <p className="text-sm text-gray-900">
+                    {selectedStudent.name 
+                      ? `${selectedStudent.name}` 
+                      : selectedStudent.name || 'Unknown'}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -257,6 +243,18 @@ const StudentManagement = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Student ID</label>
                   <p className="text-sm text-gray-900">{selectedStudent.studentId}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">University</label>
+                  <p className="text-sm text-gray-900">{selectedStudent.university}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Major</label>
+                  <p className="text-sm text-gray-900">{selectedStudent.major}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Academic Year</label>
+                  <p className="text-sm text-gray-900">{selectedStudent.academicYear}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Status</label>
@@ -280,47 +278,14 @@ const StudentManagement = () => {
         </div>
       )}
 
-      {/* Message Modal */}
-      {showMessageModal && selectedStudent && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Send Message to {selectedStudent.name}</h3>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={4}
-                  placeholder="Type your message here..."
-                />
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowMessageModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={sendMessage}
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
-                >
-                  Send Message
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Assign Task Modal */}
       {showTaskModal && selectedStudent && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Assign Task to {selectedStudent.name}</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Assign Task to {selectedStudent.firstName} {selectedStudent.lastName}
+              </h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Task Title</label>

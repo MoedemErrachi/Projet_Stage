@@ -40,15 +40,19 @@ const Signup = () => {
         alert("File size must be less than 5MB")
         return
       }
-      
+
       // Check file type
-      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ]
       if (!allowedTypes.includes(file.type)) {
         alert("Only PDF, DOC, and DOCX files are allowed")
         return
       }
 
-      if (fileType === 'cv') {
+      if (fileType === "cv") {
         setCvFile(file)
       } else {
         setMotivationFile(file)
@@ -81,7 +85,14 @@ const Signup = () => {
     }
 
     try {
-      const response = await authAPI.signup(formData, cvFile, motivationFile)
+      // Create the userData object with files
+      const userData = {
+        ...formData,
+        cvFile: cvFile,
+        motivationFile: motivationFile,
+      }
+
+      const response = await authAPI.signup(userData)
 
       // Create user object for login (pending status)
       const newUser = {
@@ -96,7 +107,7 @@ const Signup = () => {
       login(newUser)
       navigate("/student")
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed. Please try again.")
+      setError(err.response?.data?.message || err.message || "Registration failed. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -252,14 +263,12 @@ const Signup = () => {
                 <input
                   type="file"
                   id="cv"
-                  onChange={(e) => handleFileChange(e, 'cv')}
+                  onChange={(e) => handleFileChange(e, "cv")}
                   required
                   accept=".pdf,.doc,.docx"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                 />
-                {cvFile && (
-                  <p className="text-sm text-green-600 mt-1">✓ {cvFile.name} selected</p>
-                )}
+                {cvFile && <p className="text-sm text-green-600 mt-1">✓ {cvFile.name} selected</p>}
                 <p className="text-xs text-gray-500 mt-1">Upload your CV in PDF, DOC, or DOCX format (max 5MB)</p>
               </div>
 
@@ -270,15 +279,15 @@ const Signup = () => {
                 <input
                   type="file"
                   id="motivation"
-                  onChange={(e) => handleFileChange(e, 'motivation')}
+                  onChange={(e) => handleFileChange(e, "motivation")}
                   required
                   accept=".pdf,.doc,.docx"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                 />
-                {motivationFile && (
-                  <p className="text-sm text-green-600 mt-1">✓ {motivationFile.name} selected</p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">Upload your motivation letter in PDF, DOC, or DOCX format (max 5MB)</p>
+                {motivationFile && <p className="text-sm text-green-600 mt-1">✓ {motivationFile.name} selected</p>}
+                <p className="text-xs text-gray-500 mt-1">
+                  Upload your motivation letter in PDF, DOC, or DOCX format (max 5MB)
+                </p>
               </div>
             </div>
           </div>

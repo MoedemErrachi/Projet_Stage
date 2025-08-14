@@ -63,16 +63,8 @@ const StudentTasks = () => {
       try {
         await studentAPI.completeTask(selectedTask.id, response, responseFile)
         
-        // Update local state
-        setTasks(tasks.map((task) => 
-          task.id === selectedTask.id 
-            ? { ...task, response, status: "COMPLETED", responseFileName: responseFile?.name }
-            : task
-        ))
-        setSelectedTask(null)
-        setResponse("")
-        setResponseFile(null)
-        setShowModal(false)
+        // Reload the page to refresh all data
+        window.location.reload()
       } catch (error) {
         console.error("Error completing task:", error)
         setError("Failed to complete task")

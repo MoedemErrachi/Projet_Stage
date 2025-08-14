@@ -10,6 +10,7 @@ const EncadreurManagement = () => {
     name: "",
     email: "",
     department: "",
+    password: "password"
   })
   const [editingEncadreur, setEditingEncadreur] = useState(null)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -36,10 +37,15 @@ const EncadreurManagement = () => {
     e.preventDefault()
     if (newEncadreur.name && newEncadreur.email && newEncadreur.department) {
       try {
-        await adminAPI.addSupervisor(newEncadreur)
+        const supervisorData = {
+          ...newEncadreur,
+          password: "password" // Set default password
+        }
+        await adminAPI.addSupervisor(supervisorData)
         await fetchEncadreurs() // Refresh the list
-        setNewEncadreur({ name: "", email: "", department: "" })
+        setNewEncadreur({ name: "", email: "", department: "", password: "password" })
         setShowAddModal(false)
+        setError("") // Clear any previous errors
       } catch (error) {
         console.error("Error adding supervisor:", error)
         setError("Failed to add supervisor")
@@ -50,9 +56,10 @@ const EncadreurManagement = () => {
   const handleEditEncadreur = (encadreur) => {
     setEditingEncadreur(encadreur)
     setNewEncadreur({
-      name: encadreur.name,
-      email: encadreur.email,
-      department: encadreur.department,
+      name: encadreur.name || "",
+      email: encadreur.email || "",
+      department: encadreur.department || "",
+      password: "password"
     })
     setShowEditModal(true)
   }
@@ -75,9 +82,10 @@ const EncadreurManagement = () => {
       try {
         await adminAPI.updateSupervisor(editingEncadreur.id, newEncadreur)
         await fetchEncadreurs() // Refresh the list
-        setNewEncadreur({ name: "", email: "", department: "" })
+        setNewEncadreur({ name: "", email: "", department: "", password: "password" })
         setShowEditModal(false)
         setEditingEncadreur(null)
+        setError("") // Clear any previous errors
       } catch (error) {
         console.error("Error updating supervisor:", error)
         setError("Failed to update supervisor")
@@ -141,7 +149,9 @@ const EncadreurManagement = () => {
               {encadreurs.map((encadreur) => (
                 <tr key={encadreur.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{encadreur.name}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {encadreur.name || `${encadreur.firstName} ${encadreur.lastName}`}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">{encadreur.email}</div>
@@ -178,7 +188,7 @@ const EncadreurManagement = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Supervisor</h3>
               <form onSubmit={handleAddEncadreur} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                   <input
                     type="text"
                     value={newEncadreur.name}
@@ -210,10 +220,17 @@ const EncadreurManagement = () => {
                     required
                   />
                 </div>
+                <div className="text-sm text-gray-600">
+                  Default password will be set to: <strong>password</strong>
+                </div>
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => setShowAddModal(false)}
+                    onClick={() => {
+                      setShowAddModal(false)
+                      setNewEncadreur({ name: "", email: "", department: "", password: "password" })
+                      setError("")
+                    }}
                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                   >
                     Cancel
@@ -239,7 +256,7 @@ const EncadreurManagement = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Supervisor</h3>
               <form onSubmit={handleUpdateEncadreur} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                   <input
                     type="text"
                     value={newEncadreur.name}
@@ -274,7 +291,8 @@ const EncadreurManagement = () => {
                     onClick={() => {
                       setShowEditModal(false)
                       setEditingEncadreur(null)
-                      setNewEncadreur({ name: "", email: "", department: "" })
+                      setNewEncadreur({ name: "", email: "", department: "", password: "password" })
+                      setError("")
                     }}
                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                   >

@@ -45,7 +45,7 @@ const Sidebar = () => {
     <div className="fixed left-0 top-0 w-72 h-screen bg-slate-800 text-white flex flex-col z-50">
       {/* Header */}
       <div className="p-8 border-b border-slate-700 text-center">
-        <h2 className="text-2xl font-bold mb-1">IMS</h2>
+        <h2 className="text-2xl font-bold mb-1">CPG</h2>
         <p className="text-xs text-slate-400 uppercase tracking-wider">Internship Management</p>
       </div>
 
